@@ -32,3 +32,5 @@ executable learn-lens
     build-depends:    base, lens, template-haskell
     hs-source-dirs:   app
     default-language: Haskell2010
+--    ghc-options:      -O2 -Wall -Wextra -threaded -rtsopts -ddump-stg -dsuppress-all
+    ghc-options:      -O2 -Wall -Wextra -threaded -rtsopts -ddump-stg
