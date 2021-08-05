@@ -21,10 +21,10 @@ $(makeLenses ''Coord)
 --   fmap (flip set a) (return (get a))
 -- minor different it is modified to match lens defition from library
 mklens' :: Functor f => (a -> b) -> (a -> b -> a) -> (b -> f b) -> a -> f a
-mklens' get set return a = fmap (set a) (return (get a))
+mklens' get setter f a = fmap (setter a) (f (get a))
 
 x1 :: Lens Coord Coord Int Int
-x1 = mklens' _y (\r g -> r{_y=g})
+x1 = mklens' _x (\r g -> r{_x=g})
 
 -- Functor f => (Int -> f Int) -> Coord -> f Coord
 --x :: Lens Coord Coord Int Int
@@ -40,6 +40,10 @@ x3 f r = fmap (\g -> r {_x = g}) (f $ _x r)
 -- manual definition in style of https://hackernoon.com/taking-a-closer-look-at-lenses-c0304851d54c
 x4 :: Lens' Coord Int
 x4 f r@Coord{_x = x} = f x <&> \g -> r{_x = g}
+
+-- manual definition in style of https://hackernoon.com/taking-a-closer-look-at-lenses-c0304851d54c
+x4' :: Lens' Coord Int
+x4' f r@Coord{_x = x} = (\g -> r{_x = g}) <$> (f x)
 
 -- manual definition in style of https://hackernoon.com/taking-a-closer-look-at-lenses-c0304851d54c
 -- but without pattern matching
@@ -72,18 +76,30 @@ x6 f r = (\g -> r {_x = g}) <$> (f $ _x r)
 -- method defined as inlined
 x7 :: Lens' Coord Int
 x7 f (Coord x y) = fmap (\x' -> Coord x' y) (f x)
-{-# INLINE x6 #-}
+{-# INLINE x7 #-}
 
 -- example usage of lens
-incrementX = over x (+1)
-incrementY = over y (+1)
+incrementX' :: Coord -> Coord
+incrementX' = over x (+1)
+
+incrementX1' :: Coord -> Coord
+incrementX1' = over x1 (+1)
+
+incrementX4' :: Coord -> Coord
+incrementX4' = over x4 (+1)
+
+incrementX7' :: Coord -> Coord
+incrementX7' = over x7 (+1)
+
+incrementXdirectly :: Coord -> Coord
+incrementXdirectly (Coord x y) = Coord (x+1) y
 
 main :: IO ()
 main = do
   let a = Coord{_x=1, _y=2}
-  putStrLn $ show $ view x a
-  putStrLn $ show $ view y a
-  let b = incrementX a
-  putStrLn $ show $ view x b
-  putStrLn $ show $ view y b
+  putStrLn $ "a " ++ show a
+  let b = incrementX' a
+  putStrLn $ "b " ++ show b
+  let c = incrementXdirectly b
+  putStrLn $ "c " ++ show c
 
